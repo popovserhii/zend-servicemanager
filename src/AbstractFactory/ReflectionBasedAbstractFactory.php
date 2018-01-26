@@ -218,15 +218,17 @@ class ReflectionBasedAbstractFactory implements AbstractFactoryInterface
         $type = $parameter->getClass()->getName();
         $type = isset($this->aliases[$type]) ? $this->aliases[$type] : $type;
 
-        if (! $container->has($type)) {
-            throw new ServiceNotFoundException(sprintf(
-                'Unable to create service "%s"; unable to resolve parameter "%s" using type hint "%s"',
-                $requestedName,
-                $parameter->getName(),
-                $type
-            ));
+        if ($container->has($type)) {
+            return $container->get($type);
+        } elseif ($parameter->isOptional()) {
+            return $parameter->getDefaultValue();
         }
 
-        return $container->get($type);
+        throw new ServiceNotFoundException(sprintf(
+            'Unable to create service "%s"; unable to resolve parameter "%s" using type hint "%s"',
+            $requestedName,
+            $parameter->getName(),
+            $type
+        ));
     }
 }
